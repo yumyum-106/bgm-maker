@@ -164,8 +164,29 @@ select{font:400 14px var(--pix);color:var(--ink);background:var(--panel);border:
 .key i.d{border-top-style:dashed;border-top-width:2px}
 
 .tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-top:2px dashed var(--line);padding-top:14px}
-.kitpick{display:flex;align-items:center;gap:8px;font:400 13px var(--pix);color:var(--mute)}
-.kitpick select{width:auto;min-width:150px}
+.seg{display:flex;border:2px solid var(--line2);background:var(--panel2)}
+.seg button{flex:1;min-height:38px;padding:0 6px;background:none;color:var(--mute);border:0;border-right:2px solid var(--line2);font:400 13px var(--pix);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible,.kcat:focus-visible,.kit:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+.kcats{display:flex;flex-wrap:wrap;gap:6px}
+.kcat{min-height:32px;padding:0 10px;background:var(--panel);border:2px solid var(--line);color:var(--mute);font:400 13px var(--pix);cursor:pointer}
+.kcat:hover{color:var(--ink)}
+.kcat[aria-selected=true]{border-color:var(--hi);color:var(--ink);background:var(--panel2)}
+.kcat.has::after{content:" ●";font-size:9px;vertical-align:1px}
+.kits{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.kit{display:flex;justify-content:space-between;align-items:center;gap:6px;min-height:42px;padding:0 10px;text-align:left;background:var(--panel2);border:2px solid var(--line);color:var(--ink);font:400 14px var(--pix);cursor:pointer}
+.kit:hover{border-color:var(--line2)}
+.kit[aria-checked=true]{border-color:var(--hi);background:#24242b;box-shadow:3px 3px 0 #000}
+.kit[aria-checked=true] span::before{content:"▶ ";font-size:10px}
+.kit em{font:400 11px var(--pix);font-style:normal;color:var(--bg);background:var(--ink);padding:1px 5px;margin-left:4px;vertical-align:1px}
+.kit i{font-style:normal;color:var(--mute);font-size:13px}
+.kit.playing i{color:var(--hi)}
+.kitnow{font-size:13px;color:var(--mute);margin:0}
+.kitnow b{color:var(--ink);font-weight:400;font-family:var(--pix)}
+#kitBox.flash{animation:kflash .9s steps(2) 2}
+@keyframes kflash{50%{outline:2px solid var(--hi);outline-offset:2px}}
+.kitchip{justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .row select{width:auto}
 .note{font-size:13px;color:var(--mute);margin:0}
@@ -315,7 +336,8 @@ body:not(.simple) .simple-only{display:none!important}
  .layers .lbl{display:none}
  .layers .btn{padding:0 4px;font-size:12px}
  .feels{grid-template-columns:repeat(2,minmax(0,1fr))}
- .kitpick{flex:1 1 100%}.kitpick select{flex:1}
+ .kits{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .kit{font-size:13px;padding:0 8px}
 }
 @media(prefers-reduced-motion:reduce){h1::after,.step.now b,.drop.empty{animation:none}.switch i::after,.btn{transition:none}}
 </style>
@@ -392,9 +414,15 @@ body:not(.simple) .simple-only{display:none!important}
         <p class="feeldesc" id="feelDesc"></p>
       </div>
 
+      <div class="box" id="kitBox">
+        <div class="boxh"><h3>소리 고르기</h3><span class="note">악기를 누르면 바로 들려줘요</span></div>
+        <div class="seg" id="kitWho" role="group" aria-label="누구 소리를 바꿀지"></div>
+        <div class="kcats" id="kitCats" role="tablist" aria-label="악기 종류"></div>
+        <div class="kits" id="kitList" role="radiogroup" aria-label="악기"></div>
+        <p class="kitnow" id="kitNow"></p>
+      </div>
+
       <div class="tools">
-        <label class="kitpick" for="kitSel">공통 소리<select id="kitSel"></select></label>
-        <span class="sep"></span>
         <div class="row adv" id="charTools">
           <button class="btn sm" id="edit" aria-pressed="false">멜로디 손보기</button>
           <span id="editBits" class="row hidden">
@@ -874,7 +902,6 @@ const KITS={
  amb:{ko:'앰비언트',g:0.5,lp:5000,wet:.45,dr:{k:.3,s:0,h:.2,c:.4},gm:[88,89,32]}};
 const KIT_ORDER=Object.keys(KITS);
 const KIT_GROUPS=[['칩튠',['soft','chip','tri']],['건반',['piano','upright','harpsi','organ']],['줄 악기',['guitar','harp2','zither','violin','strings','cello','pizz']],['부는 악기',['flute2','clarinet','oboe','recorder','ocarina','harmonica','trumpet','horn']],['두드리는 악기',['vibes','glock','marimba2','kalimba2','xylo','chimes']],['합성 악기',['box','ep','marimba','kalimba','harp','flute','bell','steel']],['분위기',['lofi','synth','amb']]];
-const kitOptions=sel=>KIT_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}"${sel===k?' selected':''}>${KITS[k].ko}</option>`).join('')}</optgroup>`).join('');
 if(!KITS[P.kit])P.kit='soft';
 const BRIGHT={p125:1,p25:.75,p50:.5,tri:.25};
 function impulse(c,sec){const n=Math.floor(c.sampleRate*sec),b=c.createBuffer(2,n,c.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.6)}return b}
@@ -967,7 +994,7 @@ function setSong(song){if(!PL.on)return;if(song.steps!==PL.song.steps||song.bpm!
 function frame(){if(!PL.on)return;const pos=Math.max(0,(AC.currentTime-PL.t0)/PL.sd),total=PL.song.steps;drawRoll(P.loop?pos%total:Math.min(pos,total));requestAnimationFrame(frame)}
 function updPlay(){$('play').querySelector('span').textContent=PL.on?'정지':'재생';$('play').querySelector('svg').innerHTML=PL.on?'<path d="M1 1h8v8H1z"/>':'<path d="M1 0l9 5-9 5z"/>'}
 function audition(m,w,kit){ensure();playNote(LV,AC.currentTime+.01,.2,m,w,.2,'lead',kit)}
-function setKit(k){P.kit=k;save();renderKits();refresh();loadKit(k);if(!AC)return;LV=view(GL,GL.master,P.kit);if(PL.on)startPlay()}
+function setKit(k){P.kit=k;save();refresh();loadKit(k);if(!AC)return;LV=view(GL,GL.master,P.kit);if(PL.on)startPlay()}
 
 /* ---------- 악보 화면 ---------- */
 const CW=18,RH=14;let GEO=null;
@@ -1037,7 +1064,7 @@ function cardShell(side){const tag=side==='A'?'1P':'2P';return `
   <dl class="meta" id="meta${side}"></dl>
   <p class="sec">소리</p>
   <div class="cset">
-   <label><select id="kit${side}" aria-label="${tag} 소리"></select><span class="hint2">합주에서 이 캐릭터가 나오는 구간은 화음·베이스도 이 소리를 따라가요</span></label>
+   <label>소리<button class="btn sm kitchip" id="kitBtn${side}" aria-label="${tag} 소리 고르기"></button><span class="hint2">합주에서 이 캐릭터가 나오는 구간은 화음·베이스도 이 소리를 따라가요</span></label>
    <label>음 간격 <b id="spLbl${side}"></b><input type="range" min="0" max="100" step="1" id="sp${side}" aria-label="${tag} 음 간격"><span class="hint2">왼쪽은 음이 빽빽하게, 오른쪽은 듬성듬성하게</span></label>
   </div>
   </div>
@@ -1068,7 +1095,7 @@ function renderCard(side){
  $('meta'+side).innerHTML=pro
   ?`<dt>조</dt><dd>${KN[T.tonic%12]} ${MODE_KO[T.mode]} · ${T.bpm} BPM</dd><dt>주색</dt><dd>${mood}</dd><dt>훅</dt><dd>${T.H.name} (${FAM[T.a.point.fam].ko})</dd><dt>음색</dt><dd>${WAVE_KO[T.wave]}${flags}</dd>`
   :`<dt>분위기</dt><dd>${mood}</dd><dt>빠르기</dt><dd>${speedWord(T.bpm)}</dd><dt>멜로디 시작</dt><dd>${T.H.name} (${FAM[T.a.point.fam].ko})</dd><dt>멜로디 음색</dt><dd>${WAVE_PLAIN[T.wave]}${flags}</dd>`;
- const ks=$('kit'+side);if(document.activeElement!==ks)ks.innerHTML=opt('','공통 소리 따라감 ('+KITS[P.kit].ko+')',ch.kit||'')+kitOptions(ch.kit||'');
+ $('kitBtn'+side).textContent='소리: '+(ch.kit&&KITS[ch.kit]?KITS[ch.kit].ko:'둘 다 같은 소리 ('+KITS[P.kit].ko+')')+' ▸';
  const sp=$('sp'+side);if(document.activeElement!==sp)sp.value=ch.space==null?50:ch.space;$('spLbl'+side).textContent=spaceWord(ch.space==null?50:ch.space);
  const r=$('ovbpm'+side);if(document.activeElement!==r)r.value=T.bpm;
  $('bpmLbl'+side).textContent=(ov.bpm?'':'자동 · ')+speedWord(T.bpm)+(pro?` (${T.bpm} BPM)`:'');
@@ -1081,7 +1108,33 @@ function renderCard(side){
  $('pc'+side).classList.toggle('open',openCard===side);$('more'+side).setAttribute('aria-expanded',openCard===side);$('more'+side).textContent=openCard===side?'접기':'펼치기';
 }
 function infoRows(rows){return rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
-function renderKits(){const s=$('kitSel');if(document.activeElement!==s||!s.options.length)s.innerHTML=kitOptions(P.kit);s.value=P.kit}
+let kitWho='all',kitCat=null,kitPrevTok=0;
+const NEW_KITS=['guitar','violin','strings','cello','pizz','flute2','clarinet','oboe','trumpet','horn'];
+const kitOf=w=>w==='all'?P.kit:(P[w].kit&&KITS[P[w].kit]?P[w].kit:P.kit);
+const groupOf=k=>(KIT_GROUPS.find(g=>g[1].includes(k))||KIT_GROUPS[0])[0];
+function renderKits(){
+ const cur=kitOf(kitWho);if(!kitCat||!KIT_GROUPS.some(g=>g[0]===kitCat))kitCat=groupOf(cur);
+ const nm=s=>esc((P[s].name||s).slice(0,8));
+ $('kitWho').innerHTML=[['all','둘 다'],['A','1P '+nm('A')],['B','2P '+nm('B')]].map(([w,t])=>`<button data-w="${w}" aria-pressed="${kitWho===w}">${t}</button>`).join('');
+ $('kitCats').innerHTML=KIT_GROUPS.map(([g,ks])=>`<button class="kcat${ks.includes(cur)?' has':''}" role="tab" data-c="${esc(g)}" aria-selected="${g===kitCat}">${esc(g)}</button>`).join('');
+ $('kitList').innerHTML=KIT_GROUPS.find(g=>g[0]===kitCat)[1].map(k=>`<button class="kit" role="radio" data-k="${k}" aria-checked="${k===cur}"><span>${esc(KITS[k].ko)}${NEW_KITS.includes(k)?'<em>새로</em>':''}</span><i aria-hidden="true">♪</i></button>`).join('');
+ const a=P.A.kit&&KITS[P.A.kit],b=P.B.kit&&KITS[P.B.kit];
+ $('kitNow').innerHTML=kitWho==='all'
+  ?(a||b?`지금: 1P <b>${esc(KITS[kitOf('A')].ko)}</b> · 2P <b>${esc(KITS[kitOf('B')].ko)}</b> — 여기서 고르면 둘 다 바뀌어요`:`지금: 1P·2P 둘 다 <b>${esc(KITS[P.kit].ko)}</b>`)
+  :`${kitWho==='A'?'1P':'2P'}만 <b>${esc(KITS[cur].ko)}</b>`+(P[kitWho].kit?' · 합주에서 이 캐릭터가 나오는 구간은 화음·베이스도 이 소리':' (지금은 둘 다 같은 소리를 따라가요)');
+}
+async function previewKit(k,btn){
+ if(PL.on)return;ensure();const tok=++kitPrevTok;
+ if(KITS[k].s&&!ready(k)){btn&&btn.classList.add('playing');try{await loadKit(k)}catch(e){}if(tok!==kitPrevTok)return}
+ const w=TH.A&&TH.A.wave||'p50',t=AC.currentTime+.05;
+ [[60,0,.22],[64,.24,.22],[67,.48,.22],[72,.72,.6]].forEach(([m,s,l])=>playNote(LV,t+s,l,m,w,.22,'lead',k));
+ btn&&btn.classList.add('playing');setTimeout(()=>{const b=document.querySelector(`.kit[data-k="${k}"]`);b&&b.classList.remove('playing')},1400);
+}
+function pickKit(k,btn){
+ if(kitWho==='all'){const had=P.A.kit||P.B.kit;P.A.kit=null;P.B.kit=null;setKit(k);if(had)toast('1P·2P 둘 다 '+KITS[k].ko+'(으)로 바꿨어요',2400)}
+ else{P[kitWho].kit=k;loadKit(k);save();refresh();if(PL.on)startPlay()}
+ previewKit(k,document.querySelector(`.kit[data-k="${k}"]`));
+}
 function renderFeels(){
  const A=P.swap?TH.B:TH.A,B=P.swap?TH.A:TH.B;
  P.feelOpen=P.feelOpen||{};
@@ -1128,7 +1181,7 @@ function refresh(){
  TH.A=makeTheme(P.A);TH.B=makeTheme(P.B);
  SONG.A=charSong(TH.A);SONG.B=charSong(TH.B);
  FEEL_ORDER.forEach(k=>FEELS[k]=coopSong(TH.A,TH.B,k));SONG.AB=FEELS[P.rel];
- renderCard('A');renderCard('B');renderStage();renderLegend();
+ renderCard('A');renderCard('B');renderStage();renderLegend();renderKits();
  updGuide();
  save();if(PL.on)setSong(SONG[P.tab]);
 }
@@ -1556,7 +1609,7 @@ async function loadFile(side,file){if(!file||!/^image\//.test(file.type))return;
  $('adjBtn'+side).addEventListener('click',()=>{const a=$('adj'+side),open=a.classList.toggle('hidden');$('adjBtn'+side).setAttribute('aria-expanded',!open);$('adjBtn'+side).textContent=open?'직접 조정하기':'직접 조정 닫기'});
  $('ovbpm'+side).addEventListener('input',e=>{P[side].ov.bpm=+e.target.value;refresh()});
  $('adj'+side).addEventListener('change',e=>{const s=e.target.closest('select[data-ov]');if(!s)return;const k=s.dataset.ov,v=s.value;if(v===''){delete P[side].ov[k]}else P[side].ov[k]=k==='shift'?+v:k==='drum'&&/^\d$/.test(v)?+v:v;refresh()});
- $('kit'+side).addEventListener('change',e=>{P[side].kit=e.target.value||null;if(P[side].kit)loadKit(P[side].kit);refresh();if(PL.on)startPlay()});
+ $('kitBtn'+side).addEventListener('click',()=>{kitWho=side;kitCat=groupOf(kitOf(side));renderKits();const bx=$('kitBox');bx.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});bx.classList.remove('flash');void bx.offsetWidth;bx.classList.add('flash')});
  $('sp'+side).addEventListener('pointerdown',()=>{P[side].space0=P[side].space});$('sp'+side).addEventListener('keydown',()=>{if(P[side].space0===undefined)P[side].space0=P[side].space});$('sp'+side).addEventListener('focus',()=>{P[side].space0=P[side].space});
  $('sp'+side).addEventListener('input',e=>{P[side].space=+e.target.value;$('spLbl'+side).textContent=spaceWord(P[side].space)});
  $('sp'+side).addEventListener('change',async e=>{const v=+e.target.value;if(!await keepEdits(side,'음 간격을 바꾸면')){P[side].space=P[side].space0;e.target.value=P[side].space==null?50:P[side].space;refresh();return}P[side].space=v;P[side].edits=null;UNDO[side]=[];refresh()});
@@ -1571,7 +1624,9 @@ document.querySelectorAll('[data-m]').forEach(b=>{b.setAttribute('aria-pressed',
 $('loop').setAttribute('aria-pressed',P.loop);
 $('vol').value=P.vol==null?50:P.vol;
 $('vol').addEventListener('input',e=>{P.vol=+e.target.value;if(GL){const g=GL.master.gain,t=AC.currentTime;g.cancelScheduledValues(t);g.setTargetAtTime(volGain(),t,.03)}const a=document.querySelector('#wavOut audio');if(a)a.volume=Math.min(1,volGain()*2.8);save()});
-$('kitSel').addEventListener('change',e=>setKit(e.target.value));
+$('kitWho').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b)return;kitWho=b.dataset.w;kitCat=groupOf(kitOf(kitWho));renderKits()});
+$('kitCats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;kitCat=b.dataset.c;renderKits()});
+$('kitList').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b&&KITS[b.dataset.k])pickKit(b.dataset.k,b)});
 $('feels').addEventListener('toggle',e=>{const d=e.target;if(!d.classList||!d.classList.contains('fgroup'))return;P.feelOpen=P.feelOpen||{};P.feelOpen[d.dataset.g]=d.open;save()},true);
 $('feels').addEventListener('click',e=>{const b=e.target.closest('[data-rel]');if(!b)return;P.rel=b.dataset.rel;SONG.AB=FEELS[P.rel];if(!P.seen.feel){P.seen.feel=true;updGuide()}renderStage();save();if(PL.on)startPlay()});
 $('pro').checked=!!P.pro;
@@ -1615,6 +1670,7 @@ const TOUR=[
  {sel:['.tabs'],t:'테마와 합주를 오가요',x:'<b>1P 테마 · 합주 · 2P 테마</b>를 눌러 바꿔 들어요.<br>테마는 캐릭터 혼자 부르는 곡, 합주는 둘이 함께 부르는 곡이에요.'},
  {sel:[['.screen','#play']],tab:'AB',t:'재생해서 들어요',x:'<b>재생</b>을 누르면 화면에 1P·2P가 각자의 <b>포인트 색</b>으로 표시돼요. 누가 언제 부르는지 눈으로도 보여요.'},
  {sel:['#feelBox'],tab:'AB',t:'3. 합주 방식을 바꿔요',x:'둘이 <b>어떻게 같이 부를지</b> 고를 수 있어요.<br>주고받기, 돌림노래, 끼어들기, 늦게 따라가기… <b>둘의 관계</b>에 어울리는 걸 눌러 보세요.<br>카드 속 선은 1P·2P가 언제, 얼마나 높게 부르는지예요. 묶음 제목을 누르면 접고 펼 수 있어요.'},
+ {sel:['#kitBox'],t:'소리를 골라요',x:'<b>둘 다 / 1P만 / 2P만</b>을 먼저 고르고, 악기 종류를 눌러 악기를 골라요. 누르면 바로 짧게 들려줘요.<br>피아노, 통기타, 바이올린, 플루트, 칩튠… 캐릭터마다 다른 악기를 줄 수도 있어요.'},
  {sel:['#export'],t:'마음에 들면 저장해요',x:'<b>내보내기</b>에서 <b>WAV</b>(소리 파일), <b>MIDI</b>(작곡 앱용), <b>MP4</b>(바탕 이미지와 함께 곡이 흘러가는 영상)로 저장해요.<br><b>작업 파일</b>로 저장해 두면 나중에 그대로 불러와서 이어 할 수 있어요.'},
  {t:'준비 끝!',x:'이 설명은 위쪽 <b>? 사용법 안내</b> 버튼으로 언제든 다시 볼 수 있어요.<br>이제 캐릭터 그림을 올려 보세요.'}];
 let tourI=-1,tourPrevAdv=false;
