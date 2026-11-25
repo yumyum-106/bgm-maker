@@ -629,17 +629,53 @@ function genMelody(R,F,H,energy,chords,space=.5){
  let pi=energy<.5?0:energy<.75?1:2;if(space>.65)pi--;if(space>.85)pi--;if(space<.35)pi++;
  const pool=CELLS[clamp(pi,0,2)],allow=F.pent||[0,1,2,3,4,5,6];
  const inS=d=>allow.includes(((d%7)+7)%7);
- const mv=(d,dir,k)=>{for(let i=0;i<k;i++){d+=dir;let g=0;while(!inS(d)&&g++<3)d+=dir}return d};
- const restP=(energy>.75?.08:.05)*space*2+Math.max(0,space-.7)*.4,out=[];let prev=2;
- const chordOf=h=>chords[h>>1],cells={},cell=key=>cells[key]||(cells[key]=pick(R,pool));
- const hook=(h,inv)=>{const st=ctNear(chordOf(h),prev,R);let ds=H.d.map(x=>st+(inv?-x:x));if(Math.max(...ds)>HI)ds=ds.map(x=>x-7);else if(Math.min(...ds)<LO)ds=ds.map(x=>x+7);let s=h*8;ds.forEach((d,i)=>{out.push({s,l:H.l[i],d,c:(H.c&&H.c[i])||0});s+=H.l[i]});prev=ds[ds.length-1]};
- const fill=(h,key)=>{const L=cell(key);let s=h*8,cur=ctNear(chordOf(h),prev,R),dir=R()<.5?1:-1;L.forEach((l,i)=>{if(i){if(R()<restP){s+=l;return}const k=R()<.7?1:R()<.8?2:3;if(R()<.3)dir=-dir;if(cur+dir*k>HI-1)dir=-1;if(cur+dir*k<LO+1)dir=1;cur=mv(cur,dir,k)}out.push({s,l,d:cur,c:0});s+=l});prev=cur};
- const copy=(src,h)=>{const ns=out.filter(n=>n.s>=src*8&&n.s<src*8+8);if(!ns.length){fill(h,'x');return}const dl=ctNear(chordOf(h),ns[0].d)-ns[0].d;ns.forEach(n=>out.push({s:n.s+(h-src)*8,l:n.l,d:n.d+dl,c:n.c}));prev=ns[ns.length-1].d+dl};
+ const stepTo=(d,dir)=>{d+=dir;let g=0;while(!inS(d)&&g++<3)d+=dir;return d};
+ const restP=(energy>.75?.08:.05)*space*2+Math.max(0,space-.7)*.4,out=[];let prev=2,lift=0;
+ const chordOf=h=>chords[Math.min(7,h>>1)];
+ const isCT=(d,r)=>{const x=((d-r)%7+7)%7;return x===0||x===2||x===4};
+ /* 화음 음 중에서 aim에 가장 가까운 음 (범위 안) */
+ const nearCT=(r,aim)=>{let b=null;for(let d=LO;d<=HI;d++)if(isCT(d,r)&&(b===null||Math.abs(d-aim)<Math.abs(b-aim)||(Math.abs(d-aim)===Math.abs(b-aim)&&R()<.5)))b=d;return b};
+ const cells={},endPool=pool.filter(L=>L[L.length-1]>=4);
+ const cell=(key,end)=>cells[key]||(cells[key]=pick(R,end&&endPool.length?endPool:pool));
+ /* 색마다 정해진 핵심 동기(H)를 캐릭터마다 조금씩 비틀어 씀: 리듬을 같은 음 개수의 다른 리듬으로, 가운데 음 하나를 한 칸 위아래로 */
+ const M=(()=>{const n=H.d.length,d=H.d.slice();let l=H.l.slice();
+  const rs=CELLS.flat().filter(L=>L.length===n&&L.reduce((a,b)=>a+b,0)===8);if(rs.length&&R()<.5)l=pick(R,rs).slice();
+  if(n>2&&R()<.6){const i=1+Math.floor(R()*(n-2));d[i]+=R()<.5?1:-1}
+  return{d,l}})();
+ const place=(h,ds,ls)=>{if(Math.max(...ds)>HI)ds=ds.map(x=>x-7);else if(Math.min(...ds)<LO)ds=ds.map(x=>x+7);let s=h*8;ds.forEach((d,i)=>{out.push({s,l:ls[i],d,c:0});s+=ls[i]});prev=ds[ds.length-1]};
+ /* kind: 'x' 그대로 / 'alt' 끝음만 바꿔 대답처럼 / 'frag' 앞부분만 떼서 한 칸씩 올리며 되풀이 */
+ const hook=(h,kind='x',inv=false)=>{const st=nearCT(chordOf(h),prev+lift),sg=inv?-1:1;let ds=M.d.map(x=>st+sg*x),ls=M.l.slice();
+  if(kind==='alt'){const r=chordOf(h),last=ds.length-1;const c=nearCT(r,ds[last]+(R()<.5?2:-2));ds[last]=c===ds[last]?ds[last]+2:c}
+  else if(kind==='frag'){const k=Math.max(2,Math.ceil(ds.length/2)),fl=ls.slice(0,k).reduce((a,b)=>a+b,0);let fd=ds.slice(0,k),fls=ls.slice(0,k);
+   if(fl<=4){const up=lift>0||R()<.6?1:-1;const sh=nearCT(chordOf(h),fd[0]+up*2)-fd[0]||up*2;ds=fd.concat(fd.map(x=>x+sh));ls=fls.concat(fls);const tot=fl*2;ls[ls.length-1]+=8-tot}
+   else{ds=fd;ls=fls;ls[ls.length-1]+=8-fl}}
+  place(h,ds,ls)};
+ /* 목표가 있는 선율: 첫 음은 지금 화음 음, 다음 마디 화음 음을 향해 한 칸씩 걸어감. 센박은 화음 음으로. 프레이즈 끝은 길게 쉼표처럼 내려앉음 */
+ const fill=(h,key,o={})=>{
+  const L=cell(key,o.end),r=chordOf(h),nr=o.end?r:chordOf(h+1);let dir=o.dir||(R()<.5?1:-1);
+  let cur=nearCT(r,prev+lift);
+  let tgt=o.end?nearCT(r,cur-1-(R()<.5?2:0)):nearCT(nr,cur+dir*(2+Math.floor(R()*3)));
+  if(tgt===cur&&!o.end)tgt=nearCT(nr,cur+dir*4);
+  let s=h*8,nb=R()<.5?1:-1;
+  L.forEach((l,i)=>{
+   if(i){
+    const last=i===L.length-1;
+    if(!last&&R()<restP){s+=l;return}
+    const gap=tgt-cur,left=L.length-i;
+    if(o.end&&last)cur=tgt;
+    else if(gap&&(Math.abs(gap)>1||o.end)){const k=Math.abs(gap)>left*2&&R()<.5?2:1;for(let q=0;q<k;q++)cur=stepTo(cur,Math.sign(gap))}
+    else{cur=stepTo(cur,nb);nb=-nb}
+    if(s%4===0&&!isCT(cur,r)){const c=nearCT(r,cur);if(Math.abs(c-cur)<=1)cur=c}
+    cur=clamp(cur,LO,HI);
+   }
+   out.push({s,l,d:cur,c:0});s+=l});
+  prev=cur};
+ const copy=(src,h)=>{const ns=out.filter(n=>n.s>=src*8&&n.s<src*8+8);if(!ns.length){fill(h,'x');return}const dl=nearCT(chordOf(h),ns[0].d)-ns[0].d;ns.forEach(n=>out.push({s:n.s+(h-src)*8,l:n.l,d:clamp(n.d+dl,LO,HI),c:n.c}));prev=ns[ns.length-1].d+dl};
  const cad=h=>{const L=cell('cad'),t=Math.abs(prev)<=Math.abs(prev-7)?0:7,dir=prev>t?-1:prev<t?1:-1,n=L.length;let s=h*8;L.forEach((l,i)=>{out.push({s,l,d:t-dir*(n-i),c:0});s+=l});out.push({s:(h+1)*8,l:8,d:t,c:0});prev=t};
- hook(0);fill(1,'a');hook(2);fill(3,'b');
- fill(4,'c');fill(5,'d');hook(6,true);fill(7,'b');
- hook(8);copy(1,9);hook(10);fill(11,'e');
- fill(12,'c');fill(13,'f');cad(14);
+ /* 1: 제시 — 동기, 대답 */ hook(0);fill(1,'a',{dir:1});hook(2,'alt');fill(3,'b',{end:1});
+ /* 2: 대비 — 동기 조각을 올리며 되풀이, 정점 */ lift=2;fill(4,'c',{dir:1});hook(5,'frag');fill(6,'d',{dir:1});fill(7,'b',{end:1});lift=0;
+ /* 3: 다시 제시 */ hook(8);copy(1,9);hook(10,'frag',true);fill(11,'e',{dir:-1});
+ /* 4: 마무리 — 내려오며 으뜸음으로 */ fill(12,'c',{dir:-1});fill(13,'f',{dir:-1});cad(14);
  return out;
 }
 function makeTheme(ch){
