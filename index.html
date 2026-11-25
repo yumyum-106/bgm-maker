@@ -464,7 +464,7 @@ body:not(.simple) .simple-only{display:none!important}
     <summary>색 계열별 음악 규칙</summary>
     <div>
       <p class="note">가장 넓은 색(주색)이 분위기·빠르기·소리 결을, 포인트 색이 멜로디 첫머리(훅)를, 세 번째 색이 화음 소리를 정해요. 주색이 색상환 어디에 있는지에 따라 음 높이(조)가 정해지고, 무채색은 흰색 C, 회색 G, 검정 D예요.</p>
-      <p class="note">실제 악기 소리는 <a href="https://github.com/sgossner/VCSL" style="color:inherit">VCSL (Versilian Community Sample Library, CC0)</a> 녹음을 줄여서 썼어요. 처음 고를 때 잠깐 불러오는 시간이 있어요.</p>
+      <p class="note">실제 악기 소리는 <a href="https://github.com/sgossner/VCSL" style="color:inherit">VCSL</a>, <a href="https://github.com/sgossner/VSCO-2-CE" style="color:inherit">VSCO 2 CE</a>, <a href="https://github.com/sfzinstruments/Discord-SFZ-GM-Bank" style="color:inherit">Discord SFZ GM Bank</a>(통기타, Jeff Learman) 녹음을 줄여서 썼어요. 모두 CC0. 처음 고를 때 잠깐 불러오는 시간이 있어요.</p>
       <div class="scroll"><table><thead id="legendHead"></thead><tbody id="legendBody"></tbody></table></div>
     </div>
   </details>
@@ -861,9 +861,19 @@ const KITS={
  ocarina:{ko:'오카리나',s:1,n:[57, 61, 66, 70],g:0.66,lp:10000,wet:0.22,rel:0.08,sus:1,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[79, 79, 32]},
  harmonica:{ko:'하모니카',s:1,n:[36, 40, 48, 52, 60, 64, 72, 76, 84],g:0.96,lp:10000,wet:0.16,rel:0.08,sus:1,bs:1,dr:{k:.9,s:.7,h:.6,c:.6},gm:[22, 22, 32]},
  organ:{ko:'파이프 오르간',s:1,n:[33, 39, 45, 51, 57, 63, 69, 75, 81],g:0.87,lp:10000,wet:0.3,rel:0.12,sus:1,bs:1,dr:{k:.9,s:.7,h:.6,c:.6},gm:[19, 19, 19]},
+ violin:{ko:'바이올린',s:1,n:[55, 57, 60, 64, 67, 69, 72, 76, 79, 81, 84, 88, 91, 93, 96],g:0.68,lp:10000,wet:0.24,rel:0.18,sus:1,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[40, 48, 32]},
+ strings:{ko:'현악 합주',s:1,n:[55, 57, 59, 62, 66, 69, 72, 76, 79, 83, 86],g:0.71,lp:9000,wet:0.3,rel:0.25,sus:1,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[48, 48, 32]},
+ cello:{ko:'첼로',s:1,n:[36, 40, 43, 47, 50, 53, 57, 60, 64, 67, 71, 74, 77],g:1.03,lp:8000,wet:0.24,rel:0.2,sus:1,bs:1,dr:{k:.9,s:.7,h:.6,c:.6},gm:[42, 42, 42]},
+ pizz:{ko:'현 뜯기 (피치카토)',s:1,n:[55, 57, 59, 62, 66, 69, 72, 76, 79, 83, 86],g:0.72,lp:10000,wet:0.22,rel:0.4,sus:0,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[45, 45, 32]},
+ guitar:{ko:'통기타',s:1,n:[40, 43, 46, 49, 52, 55, 58, 61, 64, 68, 71, 74, 77, 80, 83],g:0.95,lp:10000,wet:0.16,rel:0.8,sus:0,bs:1,dr:{k:.9,s:.7,h:.6,c:.6},gm:[25, 25, 32]},
+ flute2:{ko:'플루트',s:1,n:[60, 64, 69, 72, 76, 81, 84, 88, 93, 96],g:0.68,lp:10000,wet:0.24,rel:0.12,sus:1,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[73, 73, 32]},
+ clarinet:{ko:'클라리넷',s:1,n:[50, 53, 58, 62, 65, 70, 74, 77, 82, 86, 90],g:0.69,lp:9000,wet:0.22,rel:0.12,sus:1,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[71, 71, 32]},
+ oboe:{ko:'오보에',s:1,n:[58, 62, 65, 70, 74, 77, 82, 86, 89],g:0.67,lp:9000,wet:0.22,rel:0.12,sus:1,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[68, 68, 32]},
+ trumpet:{ko:'트럼펫',s:1,n:[53, 57, 60, 63, 67, 70, 74, 77, 81, 84],g:0.68,lp:9000,wet:0.22,rel:0.12,sus:1,bs:0,dr:{k:.9,s:.7,h:.6,c:.6},gm:[56, 56, 32]},
+ horn:{ko:'호른',s:1,n:[36, 39, 43, 46, 50, 53, 57, 60],g:0.94,lp:7000,wet:0.26,rel:0.15,sus:1,bs:1,dr:{k:.9,s:.7,h:.6,c:.6},gm:[60, 60, 60]},
  amb:{ko:'앰비언트',g:0.5,lp:5000,wet:.45,dr:{k:.3,s:0,h:.2,c:.4},gm:[88,89,32]}};
 const KIT_ORDER=Object.keys(KITS);
-const KIT_GROUPS=[['칩튠',['soft','chip','tri']],['실제 악기 (녹음)',['piano','upright','harp2','harpsi','zither','vibes','glock','marimba2','kalimba2','xylo','chimes','recorder','ocarina','harmonica','organ']],['합성 악기',['box','ep','marimba','kalimba','harp','flute','bell','steel']],['분위기',['lofi','synth','amb']]];
+const KIT_GROUPS=[['칩튠',['soft','chip','tri']],['건반',['piano','upright','harpsi','organ']],['줄 악기',['guitar','harp2','zither','violin','strings','cello','pizz']],['부는 악기',['flute2','clarinet','oboe','recorder','ocarina','harmonica','trumpet','horn']],['두드리는 악기',['vibes','glock','marimba2','kalimba2','xylo','chimes']],['합성 악기',['box','ep','marimba','kalimba','harp','flute','bell','steel']],['분위기',['lofi','synth','amb']]];
 const kitOptions=sel=>KIT_GROUPS.map(([g,ks])=>`<optgroup label="${g}">${ks.map(k=>`<option value="${k}"${sel===k?' selected':''}>${KITS[k].ko}</option>`).join('')}</optgroup>`).join('');
 if(!KITS[P.kit])P.kit='soft';
 const BRIGHT={p125:1,p25:.75,p50:.5,tri:.25};
@@ -881,7 +891,7 @@ function env(g,t,dur,v,a,dk,sus,r){r=Math.min(r,dur*.3);a=Math.min(a,dur*.3);dk=
 function decay(g,t,v,ring){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.003);g.gain.exponentialRampToValueAtTime(.0008,t+ring);return t+ring}
 function osc(c,type,f,t,G,w){const o=c.createOscillator();if(type==='pw')o.setPeriodicWave(G.w[w]||G.w.p25);else o.type=type;o.frequency.setValueAtTime(f,t);return o}
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-/* 실제 악기 녹음: VCSL (Versilian Community Sample Library, CC0) */
+/* 실제 악기 녹음: VCSL · VSCO 2 CE · Discord SFZ GM Bank 통기타(Jeff Learman) — 모두 CC0 */
 const SBUF={};let DEC=null;
 const decCtx=()=>DEC||(DEC=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,1,44100));
 const decode=ab=>new Promise((res,rej)=>{const p=decCtx().decodeAudioData(ab,res,rej);if(p&&p.then)p.then(res,rej)});
