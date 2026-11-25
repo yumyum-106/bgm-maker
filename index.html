@@ -269,7 +269,22 @@ body:not(.simple) .simple-only{display:none!important}
 .newtag{display:inline-block;margin-left:8px;font:400 11px var(--pix);color:var(--bg);background:var(--ink);padding:2px 6px;vertical-align:2px;animation:blink 1.2s steps(1) infinite}
 @media(max-width:600px){.tbox{left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto}}
 @media(prefers-reduced-motion:reduce){.newtag{animation:none}}
-.vbox{width:min(100%,760px);max-height:92vh;overflow:auto;gap:12px}
+.vbox{width:min(100%,560px);max-height:92vh;overflow:auto;gap:12px;padding-bottom:0}
+.vhead{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.vmeta{font:400 12px var(--pix);color:var(--mute)}
+.vlay{display:grid;gap:12px}
+.vleft{display:grid;gap:8px;align-content:start}
+.vright{display:grid;gap:12px;align-content:start;min-width:0}
+.vbox .vhint{margin:0;font:400 12px/1.5 var(--sans);color:var(--mute)}
+.vtabs{display:flex;border-bottom:2px solid var(--line)}
+.vtabs button{flex:1;min-height:40px;background:none;border:0;color:var(--mute);font:400 14px var(--pix);cursor:pointer;box-shadow:inset 0 -3px 0 transparent}
+.vtabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--ink)}
+.vtabs button:focus-visible{outline:2px solid var(--hi);outline-offset:-2px}
+.vpane{display:grid;gap:14px;align-content:start}
+.vfoot{position:sticky;bottom:0;margin:0 -18px;padding:12px 18px;background:var(--panel);border-top:2px solid var(--line);justify-content:flex-end;z-index:2}
+.vfoot .yes{flex:0 1 220px}
+@media(min-width:900px){.vbox{width:min(100%,1060px)}.vlay{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);align-items:start}.vleft{position:sticky;top:0}}
+@media(max-width:600px){.vleft{position:sticky;top:-18px;z-index:2;background:var(--panel);padding-top:4px;margin-top:-4px}.vfoot .btn{flex:1}.vfoot .yes{flex:2}}
 .vh{margin:0;font:700 18px var(--pix)}
 #vPrev{width:100%;height:auto;aspect-ratio:16/9;display:block;background:#000;border:2px solid var(--line2)}
 .vrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -288,15 +303,20 @@ body:not(.simple) .simple-only{display:none!important}
 .vcol{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);min-height:40px;cursor:pointer}
 .vcol input{width:36px;height:32px;padding:0;border:2px solid var(--line2);background:none;cursor:pointer}
 #vPrev{touch-action:none;cursor:grab}
-.vths{display:flex;flex-wrap:wrap;gap:6px}
-.vth[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.vths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.vth{display:grid;gap:5px;padding:5px;background:var(--panel2);border:2px solid var(--line);color:var(--ink);font:400 13px var(--pix);text-align:left;cursor:pointer}
+.vth:hover{border-color:var(--line2)}
+.vth canvas{width:100%;aspect-ratio:16/9;display:block;background:#000}
+.vth[aria-checked=true]{border-color:var(--hi);box-shadow:3px 3px 0 #000}
+.vth[aria-checked=true] span::before{content:"▶ ";font-size:10px}
+.vth:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+@media(min-width:900px){.vths{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .vchk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);min-height:34px}
 .vchk input{width:16px;height:16px;accent-color:#ededf0}
 .vprog{display:grid;gap:6px;font:400 13px var(--pix);color:var(--mute)}
 .vtrack{height:10px;border:2px solid var(--line2);background:var(--panel2)}
 .vtrack i{display:block;height:100%;width:0;background:var(--ink);transition:width .15s}
 #vOut{width:100%;border:2px solid var(--line2);background:#000}
-@media(max-width:600px){.vgrid{grid-template-columns:minmax(0,1fr)}}
 .msep{border:0;border-top:2px dashed var(--line);margin:4px 0;width:100%}
 .hfile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .export .menu label.btn{justify-content:flex-start;box-shadow:none;width:100%}
@@ -453,27 +473,40 @@ body:not(.simple) .simple-only{display:none!important}
     </div>
   </div>
   <div class="modal hidden" id="vModal" role="dialog" aria-modal="true" aria-labelledby="vHead"><div class="mbox vbox">
-    <h3 class="vh" id="vHead">영상으로 저장 (MP4)</h3>
-    <canvas id="vPrev" width="640" height="360" aria-label="영상 미리보기"></canvas>
-    <div class="vrow"><button class="btn sm" id="vAnim" aria-pressed="false">미리보기 움직이기</button><label class="vscrub" for="vScrub">위치<input type="range" id="vScrub" min="0" max="1000"></label></div>
-    <div class="vgrid">
-      <div class="vfield vwide"><span>영상 테마</span><div class="vths" id="vThemes" role="group" aria-label="영상 테마"></div></div>
-      <div class="vfield vwide"><span>바탕 이미지 <em>가로로 긴 그림 추천 · 미리보기를 끌면 위치, 휠로 확대</em></span><div class="vrow"><label class="btn sm" for="vImg">이미지 올리기</label><input type="file" id="vImg" accept="image/*" class="vfile"><button class="btn sm" id="vImgClear">지우기</button><button class="btn sm" id="vPosReset">위치·확대 처음대로</button></div><small id="vImgName">없음 (어두운 바탕)</small></div>
-      <label class="vfield" for="vZoom"><span>확대 <b id="vZoomL"></b></span><input type="range" id="vZoom" min="100" max="300"></label>
-      <label class="vfield" for="vOp"><span>바탕 불투명도 <b id="vOpL"></b></span><input type="range" id="vOp" min="0" max="100"></label>
-      <label class="vfield" for="vBX"><span>좌우 위치</span><input type="range" id="vBX" min="-100" max="100"></label>
-      <label class="vfield" for="vBY"><span>상하 위치</span><input type="range" id="vBY" min="-100" max="100"></label>
-      <label class="vfield" for="vBlur"><span>바탕 흐림 <b id="vBlurL"></b></span><input type="range" id="vBlur" min="0" max="20"></label>
-      <label class="vfield" for="vRes"><span>화질</span><select id="vRes"><option value="720">720p · 빠름</option><option value="1080">1080p · 선명</option></select></label>
-      <label class="vfield" for="vTT"><span>제목 <em>비워두면 안 넣어요</em></span><input type="text" id="vTT" class="vtext" maxlength="40" placeholder="예: 곰냥의 노래"></label>
-      <label class="vfield" for="vST"><span>작은 글씨 <em>제목 아래</em></span><input type="text" id="vST" class="vtext" maxlength="60" placeholder="예: 2025 겨울, 둘이 처음 만난 날"></label>
-      <div class="vfield"><span>멜로디 색 <em>영상에서만 바뀌어요</em></span><div class="vrow"><label class="vcol"><input type="color" id="vC1"><span id="vC1L">1P</span></label><label class="vcol"><input type="color" id="vC2"><span id="vC2L">2P</span></label><button class="btn sm" id="vColReset">원래 색</button></div></div>
-      <div class="vfield"><span>표시</span><label class="vchk"><input type="checkbox" id="vNames">캐릭터 그림·이름</label><label class="vchk"><input type="checkbox" id="vBarChk">진행바·시간</label></div>
+    <div class="vhead"><h3 class="vh" id="vHead">영상으로 저장</h3><span class="vmeta" id="vMeta"></span></div>
+    <div class="vlay">
+     <div class="vleft">
+      <canvas id="vPrev" width="640" height="360" aria-label="영상 미리보기"></canvas>
+      <div class="vrow"><button class="btn sm" id="vAnim" aria-pressed="false">▶ 미리보기</button><label class="vscrub" for="vScrub">위치<input type="range" id="vScrub" min="0" max="1000"></label></div>
+      <p class="vhint" id="vHint"></p>
+     </div>
+     <div class="vright">
+      <div class="vtabs" role="tablist" aria-label="영상 설정">
+       <button role="tab" id="vtab-th" data-p="th" aria-selected="true" aria-controls="vp-th">테마</button><button role="tab" id="vtab-bg" data-p="bg" aria-selected="false" aria-controls="vp-bg">바탕</button><button role="tab" id="vtab-tx" data-p="tx" aria-selected="false" aria-controls="vp-tx">글자</button><button role="tab" id="vtab-op" data-p="op" aria-selected="false" aria-controls="vp-op">설정</button>
+      </div>
+      <div class="vpane" id="vp-th" role="tabpanel" aria-labelledby="vtab-th"><div class="vths" id="vThemes" role="radiogroup" aria-label="영상 테마"></div></div>
+      <div class="vpane hidden" id="vp-bg" role="tabpanel" aria-labelledby="vtab-bg">
+       <div class="vfield"><span>바탕 이미지 <em>가로로 긴 그림 추천</em></span><div class="vrow"><label class="btn sm" for="vImg">이미지 올리기</label><input type="file" id="vImg" accept="image/*" class="vfile"><button class="btn sm" id="vImgClear">지우기</button></div><small id="vImgName">없음 (어두운 바탕)</small></div>
+       <label class="vfield" for="vZoom"><span>확대 <b id="vZoomL"></b> <em>미리보기에서 두 손가락·휠로도 돼요</em></span><input type="range" id="vZoom" min="100" max="300"></label>
+       <label class="vfield" for="vOp"><span>바탕 진하기 <b id="vOpL"></b> <em>낮추면 글자·음이 잘 보여요</em></span><input type="range" id="vOp" min="0" max="100"></label>
+       <label class="vfield" for="vBlur"><span>바탕 흐림 <b id="vBlurL"></b></span><input type="range" id="vBlur" min="0" max="20"></label>
+       <div><button class="btn sm" id="vPosReset">위치·확대 처음대로</button></div>
+      </div>
+      <div class="vpane hidden" id="vp-tx" role="tabpanel" aria-labelledby="vtab-tx">
+       <label class="vfield" for="vTT"><span>제목 <em>비워두면 안 넣어요</em></span><input type="text" id="vTT" class="vtext" maxlength="40" placeholder="예: 곰냥의 노래"></label>
+       <label class="vfield" for="vST"><span>작은 글씨 <em>제목 아래</em></span><input type="text" id="vST" class="vtext" maxlength="60" placeholder="예: 2025 겨울, 둘이 처음 만난 날"></label>
+       <div class="vfield"><span>멜로디 색 <em>영상에서만 바뀌어요</em></span><div class="vrow"><label class="vcol"><input type="color" id="vC1"><span id="vC1L">1P</span></label><label class="vcol"><input type="color" id="vC2"><span id="vC2L">2P</span></label><button class="btn sm" id="vColReset">원래 색</button></div></div>
+      </div>
+      <div class="vpane hidden" id="vp-op" role="tabpanel" aria-labelledby="vtab-op">
+       <div class="vfield"><span>화질</span><div class="seg" id="vResSeg" role="group" aria-label="화질"><button data-r="720" aria-pressed="true">720p · 빠름</button><button data-r="1080" aria-pressed="false">1080p · 선명</button></div></div>
+       <div class="vfield"><span>화면에 보일 것</span><label class="vchk"><input type="checkbox" id="vNames">캐릭터 그림·이름</label><label class="vchk"><input type="checkbox" id="vBarChk">진행바·시간</label></div>
+      </div>
+      <p class="note" id="vInfo"></p>
+     </div>
     </div>
-    <p class="note" id="vInfo"></p>
     <div class="vprog hidden" id="vProg"><div class="vtrack"><i id="vBar"></i></div><span id="vPct"></span></div>
     <video id="vOut" class="hidden" controls playsinline></video>
-    <div class="row"><button class="btn sm" id="vCancel">닫기</button><button class="btn sm yes" id="vGo">영상 만들기</button></div>
+    <div class="row vfoot"><button class="btn sm" id="vCancel">닫기</button><button class="btn sm yes" id="vGo">영상 만들기</button></div>
   </div></div>
   <div class="modal hidden" id="sfModal" role="dialog" aria-modal="true" aria-labelledby="sfHead"><div class="mbox sfbox">
     <h3 class="sfh" id="sfHead">이 화면에서는 파일 저장이 막혀 있어요</h3>
@@ -1515,7 +1548,7 @@ async function encodeRT(V,W,H,onp){
  return new Blob(chunks,{type:mime.split(';')[0]});
 }
 const fontsReady=()=>document.fonts?Promise.all(['700 34px Galmuri11','400 17px Galmuri11'].map(f=>document.fonts.load(f).catch(()=>{}))):Promise.resolve();
-function vInfo(){const V=vSpec();$('vInfo').textContent=`${V.co?'합주':V.A.name+' 테마'} · 약 ${Math.round(V.dur)}초 · ${VS.res}p. 지금 고른 탭의 곡이 영상이 돼요. 꺼둔 트랙은 빠져요.`;
+function vInfo(){const V=vSpec();$('vMeta').textContent=`${V.co?'합주':V.A.name+' 테마'} · 약 ${Math.round(V.dur)}초 · ${VS.res}p`;$('vInfo').textContent='지금 고른 탭의 곡이 영상이 돼요. 꺼둔 트랙은 빠져요.';$('vHint').textContent=VS.bg?'미리보기를 끌면 바탕이 움직이고, 두 손가락(PC는 휠)으로 확대해요':'바탕 탭에서 이미지를 올릴 수 있어요';$('vResSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.r===VS.res)));
  $('vC1').value=VS.col1||TH.A.color;$('vC2').value=VS.col2||TH.B.color;$('vC1L').textContent=TH.A.name;$('vC2L').textContent=TH.B.name}
 function vPreview(){const c=$('vPrev'),V=vSpec(),x=c.getContext('2d');vFrame(x,c.width,c.height,V.off+VS.scrub*(V.dur-V.off-2.6),V)}
 function vAnimLoop(){if(!VS.anim||$('vModal').classList.contains('hidden')){VS.anim=false;$('vAnim').setAttribute('aria-pressed',false);return}VS.scrub=(VS.scrub+1/(30*24))%1;$('vScrub').value=Math.round(VS.scrub*1000);vPreview();requestAnimationFrame(vAnimLoop)}
@@ -1535,7 +1568,7 @@ async function makeVideo(){
  }catch(e){console.error(e);toast('영상을 만들지 못했어요')}
  finally{VS.busy=false;$('vGo').disabled=false;$('vCancel').textContent='닫기'}
 }
-function openVideo(){$('export').open=false;vThemesUI();if(PL.on)stopPlay();$('vModal').classList.remove('hidden');$('vOp').value=VS.op;$('vBlur').value=VS.blur;$('vRes').value=String(VS.res);$('vTT').value=VS.tt;$('vST').value=VS.st;$('vNames').checked=VS.names;$('vBarChk').checked=VS.bar;$('vZoom').value=VS.zoom;$('vBX').value=VS.bx;$('vBY').value=VS.by;$('vZoomL').textContent=VS.zoom+'%';$('vScrub').value=Math.round(VS.scrub*1000);$('vOpL').textContent=VS.op+'%';$('vBlurL').textContent=VS.blur?VS.blur+'px':'없음';vInfo();fontsReady().then(vPreview);vPreview()}
+function openVideo(){$('export').open=false;vThemesUI();if(PL.on)stopPlay();$('vModal').classList.remove('hidden');$('vOp').value=VS.op;$('vBlur').value=VS.blur;$('vTT').value=VS.tt;$('vST').value=VS.st;$('vNames').checked=VS.names;$('vBarChk').checked=VS.bar;$('vZoom').value=VS.zoom;$('vZoomL').textContent=VS.zoom+'%';$('vScrub').value=Math.round(VS.scrub*1000);$('vOpL').textContent=VS.op+'%';$('vBlurL').textContent=VS.blur?VS.blur+'px':'없음';vInfo();fontsReady().then(()=>{vPreview();vThumbs()});vPreview();vThumbs()}
 function closeVideo(){if(VS.busy){VS.cancel=true;return}VS.anim=false;$('vModal').classList.add('hidden')}
 $('mp4').addEventListener('click',openVideo);
 $('vCancel').addEventListener('click',closeVideo);
@@ -1544,28 +1577,35 @@ $('vModal').addEventListener('click',e=>{if(e.target===$('vModal')&&!VS.busy)clo
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('vModal').classList.contains('hidden')&&!VS.busy)closeVideo()});
 $('vOp').addEventListener('input',e=>{VS.op=+e.target.value;$('vOpL').textContent=VS.op+'%';vPreview()});
 $('vBlur').addEventListener('input',e=>{VS.blur=+e.target.value;$('vBlurL').textContent=VS.blur?VS.blur+'px':'없음';vPreview()});
-$('vRes').addEventListener('change',e=>{VS.res=+e.target.value;vInfo()});
+$('vResSeg').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;VS.res=+b.dataset.r;vInfo()});
+let vTab='th';$('vModal').querySelector('.vtabs').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;vTab=b.dataset.p;$('vModal').querySelectorAll('.vtabs button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));['th','bg','tx','op'].forEach(k=>$('vp-'+k).classList.toggle('hidden',k!==vTab));if(vTab==='th')vThumbs()});
 $('vTT').addEventListener('input',e=>{VS.tt=e.target.value.slice(0,40);vPreview()});
 $('vST').addEventListener('input',e=>{VS.st=e.target.value.slice(0,60);vPreview()});
-function vThemesUI(){const box=$('vThemes');if(!box.children.length)VTH.forEach(([id,nm])=>{const b=document.createElement('button');b.type='button';b.className='btn sm vth';b.dataset.th=id;b.textContent=nm;b.addEventListener('click',()=>{VS.theme=id;vThemesUI();vPreview()});box.appendChild(b)});box.querySelectorAll('.vth').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.th===VS.theme)))}
+function vThemesUI(){const box=$('vThemes');if(!box.children.length)VTH.forEach(([id,nm])=>{const b=document.createElement('button');b.type='button';b.className='vth';b.setAttribute('role','radio');b.dataset.th=id;b.innerHTML=`<canvas width="320" height="180" aria-hidden="true"></canvas><span>${esc(nm)}</span>`;b.addEventListener('click',()=>{VS.theme=id;vThemesUI();vPreview()});box.appendChild(b)});box.querySelectorAll('.vth').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.th===VS.theme)))}
+/* 테마 카드 그림: 실제 영상 화면을 작게 그림 */
+let vThumbT=0;function vThumbs(){clearTimeout(vThumbT);vThumbT=setTimeout(()=>{const V=vSpec(),keep=VS.theme,t=V.off+.42*(V.dur-V.off-2.6);try{$('vThemes').querySelectorAll('.vth').forEach(b=>{VS.theme=b.dataset.th;const c=b.querySelector('canvas');vFrame(c.getContext('2d'),c.width,c.height,t,V)})}finally{VS.theme=keep}},60)}
 $('vNames').addEventListener('change',e=>{VS.names=e.target.checked;vPreview()});
 $('vBarChk').addEventListener('change',e=>{VS.bar=e.target.checked;vPreview()});
 $('vZoom').addEventListener('input',e=>{VS.zoom=+e.target.value;$('vZoomL').textContent=VS.zoom+'%';vPreview()});
-$('vBX').addEventListener('input',e=>{VS.bx=+e.target.value;vPreview()});
-$('vBY').addEventListener('input',e=>{VS.by=+e.target.value;vPreview()});
-$('vPosReset').addEventListener('click',()=>{VS.zoom=100;VS.bx=0;VS.by=0;$('vZoom').value=100;$('vBX').value=0;$('vBY').value=0;$('vZoomL').textContent='100%';vPreview()});
+$('vPosReset').addEventListener('click',()=>{VS.zoom=100;VS.bx=0;VS.by=0;$('vZoom').value=100;$('vZoomL').textContent='100%';vPreview()});
 $('vC1').addEventListener('input',e=>{VS.col1=e.target.value;vPreview()});
 $('vC2').addEventListener('input',e=>{VS.col2=e.target.value;vPreview()});
 $('vColReset').addEventListener('click',()=>{VS.col1=VS.col2=null;vInfo();vPreview()});
-{let drag=null;const pc=$('vPrev');
- pc.addEventListener('pointerdown',e=>{if(!VS.bg)return;drag={x:e.clientX,y:e.clientY,bx:VS.bx,by:VS.by};pc.setPointerCapture(e.pointerId)});
- pc.addEventListener('pointermove',e=>{if(!drag)return;const r=pc.getBoundingClientRect();VS.bx=clamp(Math.round(drag.bx-(e.clientX-drag.x)/r.width*200),-100,100);VS.by=clamp(Math.round(drag.by-(e.clientY-drag.y)/r.height*200),-100,100);$('vBX').value=VS.bx;$('vBY').value=VS.by;vPreview()});
- const end=()=>{drag=null};pc.addEventListener('pointerup',end);pc.addEventListener('pointercancel',end);
- pc.addEventListener('wheel',e=>{if(!VS.bg)return;e.preventDefault();VS.zoom=clamp(Math.round(VS.zoom-e.deltaY*.15),100,300);$('vZoom').value=VS.zoom;$('vZoomL').textContent=VS.zoom+'%';vPreview()},{passive:false})}
+{let drag=null,pinch=null;const pc=$('vPrev'),pts=new Map();
+ const setZoom=z=>{VS.zoom=clamp(Math.round(z),100,300);$('vZoom').value=VS.zoom;$('vZoomL').textContent=VS.zoom+'%';vPreview()};
+ const dist=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1};
+ pc.addEventListener('pointerdown',e=>{if(!VS.bg)return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});pc.setPointerCapture(e.pointerId);
+  if(pts.size===2){drag=null;pinch={d:dist(),z:VS.zoom}}else if(pts.size===1)drag={x:e.clientX,y:e.clientY,bx:VS.bx,by:VS.by}});
+ pc.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch&&pts.size>=2){setZoom(pinch.z*dist()/pinch.d);return}
+  if(!drag)return;const r=pc.getBoundingClientRect();VS.bx=clamp(Math.round(drag.bx-(e.clientX-drag.x)/r.width*200),-100,100);VS.by=clamp(Math.round(drag.by-(e.clientY-drag.y)/r.height*200),-100,100);vPreview()});
+ const end=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)drag=null;else if(pts.size===1&&!drag){const [q]=[...pts.values()];drag={x:q.x,y:q.y,bx:VS.bx,by:VS.by}}};
+ pc.addEventListener('pointerup',end);pc.addEventListener('pointercancel',end);
+ pc.addEventListener('wheel',e=>{if(!VS.bg)return;e.preventDefault();setZoom(VS.zoom-e.deltaY*.15)},{passive:false})}
 $('vScrub').addEventListener('input',e=>{VS.scrub=+e.target.value/1000;vPreview()});
 $('vAnim').addEventListener('click',()=>{VS.anim=!VS.anim;$('vAnim').setAttribute('aria-pressed',VS.anim);if(VS.anim)vAnimLoop()});
-$('vImg').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f||!/^image\//.test(f.type))return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1920/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);VS.bg=c;$('vImgName').textContent=f.name;vPreview()};im.onerror=()=>toast('이미지를 읽지 못했어요');im.src=fr.result};fr.readAsDataURL(f)});
-$('vImgClear').addEventListener('click',()=>{VS.bg=null;$('vImgName').textContent='없음 (어두운 바탕)';vPreview()});
+$('vImg').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f||!/^image\//.test(f.type))return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1920/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);VS.bg=c;$('vImgName').textContent=f.name;vInfo();vPreview();vThumbs()};im.onerror=()=>toast('이미지를 읽지 못했어요');im.src=fr.result};fr.readAsDataURL(f)});
+$('vImgClear').addEventListener('click',()=>{VS.bg=null;$('vImgName').textContent='없음 (어두운 바탕)';vInfo();vPreview();vThumbs()});
 
 /* ---------- 작업 파일 저장·불러오기 ---------- */
 const PROJ_APP='palette-pair-bgm';
