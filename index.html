@@ -1355,7 +1355,7 @@ function vSpec(){
   title:co?`${A.name} × ${B.name}`:`${A.name} 테마`,sub:co?FEEL[song.rel].ko:`${FAM[A.a.dom.fam].ko} → ${A.F.mood}`,
   secs:song.sections||[{at:0,label:A.name+' 테마',col:A.color}]};
 }
-const VTH=[['roll','기본 스크롤'],['vhs','레트로 VHS'],['star','별자리'],['thread','붉은 실'],['rhythm','리듬게임'],['rpg','도트 대화창'],['keys','떨어지는 건반'],['film','필름 스트립'],['rain','창문 빗방울']];
+const VTH=[['roll','기본 스크롤'],['vhs','레트로 VHS'],['star','별자리'],['thread','붉은 실'],['rhythm','리듬게임'],['rpg','도트 대화창'],['keys','떨어지는 건반'],['film','필름 스트립'],['rain','창문 빗방울'],['fire','불꽃놀이']];
 function rr(x,X,Y,w,h,r){x.beginPath();if(x.roundRect)x.roundRect(X,Y,w,h,r);else x.rect(X,Y,w,h)}
 const vcol=(V,e)=>V.co?(e.who==='B'?V.cB:e.who==='A'?V.cA:(e.col||'#ffffff')):V.cA;
 function vFrame(x,W,H,t,V){
@@ -1553,7 +1553,33 @@ rain(x,W,H,t,V,o){
   x.globalAlpha=fade;x.fillStyle=col;if(age<.5){x.shadowColor=col;x.shadowBlur=22*k}x.beginPath();x.arc(X,Y+slide,r,0,Math.PI*2);x.fill();x.shadowBlur=0;x.fillStyle='rgba(255,255,255,.7)';x.beginPath();x.arc(X-r*.35,Y+slide-r*.35,r*.3,0,Math.PI*2);x.fill();x.globalAlpha=1});
  x.strokeStyle='rgba(10,14,22,.85)';x.lineWidth=14*k;x.strokeRect(7*k,7*k,W-14*k,H-14*k);x.lineWidth=10*k;x.beginPath();x.moveTo(W/2,0);x.lineTo(W/2,H);x.moveTo(0,H*.5);x.lineTo(W,H*.5);x.stroke();
  x.globalAlpha=.05+.05*amp;x.fillStyle='#cfe0ff';x.fillRect(0,0,W,H);x.globalAlpha=1;
- vVig(x,W,H,.55)}
+ vVig(x,W,H,.55)},
+fire(x,W,H,t,V,o){
+ const{k,cur,amp}=o,c=vPrep(V),gy=H*.86;
+ if(!(VS.bg&&VS.bg.width)){const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#04050f');g.addColorStop(.7,'#0b0f26');g.addColorStop(1,'#151a36');x.fillStyle=g;x.fillRect(0,0,W,H)}else{x.fillStyle='rgba(3,4,14,.45)';x.fillRect(0,0,W,H)}
+ if(!c.fst){const R=rng(31);c.fst=[...Array(90)].map(()=>[R(),R()*.6,R()*6.28]);const S=rng(77),sk=[];let X=0;while(X<1){const w=.03+S()*.06;sk.push([X,w,.04+S()*.1]);X+=w}c.fsk=sk}
+ x.fillStyle='#fff';c.fst.forEach(([a,b,p])=>{x.globalAlpha=.1+.25*(.5+.5*Math.sin(t*1.3+p));x.fillRect(a*W,b*H,1.5*k,1.5*k)});x.globalAlpha=1;
+ const posOf=e=>{const h=((e.t*7919+e.m*131)%997)/997,ln=vLane(V,e),x0=V.co?(ln?W*.55:W*.1):W*.15,w=V.co?W*.35:W*.7,pf=clamp((e.m-V.lo)/(V.hi-V.lo),0,1);return[x0+h*w,H*(.58-.36*pf)-h*H*.06]};
+ let flash=0;
+ x.globalCompositeOperation='lighter';
+ c.lead.forEach(e=>{const age=(cur-e.t)*V.sd,col=vcol(V,e),[X,Y]=posOf(e),big=e.l>=4,up=.38;
+  if(age<-up||age>2.2)return;
+  if(age<0){const p=1+age/up,ey=gy+(Y-gy)*(1-(1-p)*(1-p)),sx=X+(1-p)*12*k;x.fillStyle=col;x.globalAlpha=.9;x.fillRect(sx-1.5*k,ey-1.5*k,3*k,3*k);x.globalAlpha=.35;x.fillRect(sx-k,ey,2*k,(gy-ey)*.25*(1-p)+10*k);x.globalAlpha=1;return}
+  flash=Math.max(flash,(big?.22:.12)*Math.max(0,1-age/.35));
+  const R=rng(e.t*977+e.m*13+1),n=big?48:30,sp=(big?200:135)*k,life=big?2.2:1.6;if(age>life)return;
+  const fade=Math.max(0,1-age/life),E=a=>1-Math.pow(1-Math.min(1,a/.9),3),ease=E(age),ease0=E(Math.max(0,age-.07)),dy=a=>80*k*a*a;
+  x.lineCap='round';
+  for(let i=0;i<n;i++){const a=i/n*Math.PI*2+R()*.2,v=sp*(.7+.4*R()),cx_=Math.cos(a)*v,cy_=Math.sin(a)*v,px=X+cx_*ease,py=Y+cy_*ease+dy(age),qx=X+cx_*ease0,qy=Y+cy_*ease0+dy(Math.max(0,age-.07));
+   const tw=age>life*.55?(.5+.5*Math.sin(age*30+i*2.3)):1,r=(big?3.2:2.6)*k*(.55+.45*fade);
+   x.globalAlpha=fade*tw*.55;x.strokeStyle=col;x.lineWidth=r*1.3;x.beginPath();x.moveTo(qx,qy);x.lineTo(px,py);x.stroke();
+   x.globalAlpha=fade*tw;x.fillStyle=i%4===0?'#fff':col;x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill()}
+  if(age<.25){const g=x.createRadialGradient(X,Y,0,X,Y,70*k);g.addColorStop(0,hexA('#ffffff',.7*(1-age/.25)));g.addColorStop(.3,hexA(col,.5*(1-age/.25)));g.addColorStop(1,hexA(col,0));x.globalAlpha=1;x.fillStyle=g;x.fillRect(X-70*k,Y-70*k,140*k,140*k)}
+  x.globalAlpha=1});
+ x.globalCompositeOperation='source-over';
+ if(flash>0){x.fillStyle=`rgba(180,190,255,${flash*.35})`;x.fillRect(0,0,W,H)}
+ x.fillStyle='#05060c';c.fsk.forEach(([a,w,h])=>{x.fillRect(a*W,gy-h*H*.6,w*W+1,H-gy+h*H*.6)});
+ x.fillStyle='rgba(255,210,140,.35)';c.fsk.forEach(([a,w,h],i)=>{const R=rng(i*17+5);for(let j=0;j<4;j++)if(R()<.5)x.fillRect(a*W+R()*w*W,gy-h*H*.6+R()*h*H*.5,3*k,4*k)});
+ vVig(x,W,H,.5)}
 };
 
 async function vAudio(V,sr){
