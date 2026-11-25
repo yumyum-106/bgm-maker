@@ -417,7 +417,7 @@ body:not(.simple) .simple-only{display:none!important}
       <div class="transport">
         <button class="btn go" id="play"><svg viewBox="0 0 10 10"><path d="M1 0l9 5-9 5z"/></svg><span>재생</span></button>
         <button class="btn sm adv" id="loop" aria-pressed="true">반복</button>
-        <span class="hist" role="group" aria-label="되돌리기"><button class="btn sm" id="hUndo" title="되돌리기 (Ctrl+Z)" aria-label="되돌리기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 2 7l4 4M2.5 7H10a4 4 0 0 1 0 8H8" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="btn sm" id="hRedo" title="다시 하기 (Ctrl+Shift+Z)" aria-label="다시 하기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10 3 4 4-4 4M13.5 7H6a4 4 0 0 0 0 8h2" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></span>
+        <span class="hist" role="group" aria-label="되돌리기"><button class="btn sm" id="hUndo" title="되돌리기 (Ctrl+Z)" aria-label="되돌리기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 2 7l4 4M2.5 7H10a4 4 0 0 1 0 8H8" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="btn sm" id="hRedo" title="다시 하기 (Ctrl+Shift+Z)" aria-label="다시 하기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10 3 4 4-4 4M13.5 7H6a4 4 0 0 0 0 8h2" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><button class="btn sm" id="hClear" title="되돌리기 기록 지우기" aria-label="되돌리기 기록 지우기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M6 4V1.8h4V4M3.6 4l.9 10.2h7l.9-10.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button></span>
         <label class="vol" for="vol">볼륨<input type="range" id="vol" min="0" max="100" step="1"></label>
         <span class="sep"></span>
         <div class="layers adv" role="group" aria-label="트랙 켜고 끄기">
@@ -928,18 +928,21 @@ const TH={},SONG={},FEELS={};
 let openCard=null;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}}
 /* 되돌리기 기록: 곡이 바뀌는 상태만 (탭·편집모드 제외). 그림은 글자 복사 없이 참조로 보관 */
-const HIST={u:[],r:[],cur:null,at:0,lock:false},HIST_SKIP=new Set(['img','tab','edit','space0','vol','pro','loop','mute','len']);
+const HIST={u:[],r:[],cur:null,at:0,lock:false},HIST_SKIP=new Set(['img','tab','edit','space0','vol','pro','loop','mute','len','tourOff','seen','feelOpen','guideOff','adv']);
 function histSnap(){const imgs={A:P.A.img,B:P.B.img};return{s:JSON.stringify(P,(k,v)=>HIST_SKIP.has(k)?undefined:v),imgs}}
-function histRec(){if(HIST.lock)return;const n=histSnap();if(!HIST.cur){HIST.cur=n;return}
+function histRec(){if(HIST.lock)return;const n=histSnap();if(!HIST.cur){HIST.cur=n;histUI();return}
  if(n.s===HIST.cur.s&&n.imgs.A===HIST.cur.imgs.A&&n.imgs.B===HIST.cur.imgs.B)return;
  const now=Date.now();if(now-HIST.at>700||!HIST.u.length){HIST.u.push(HIST.cur);if(HIST.u.length>80)HIST.u.shift()}
  HIST.at=now;HIST.cur=n;HIST.r=[];histUI()}
 function histGo(dir){const from=dir<0?HIST.u:HIST.r,to=dir<0?HIST.r:HIST.u;if(!from.length){toast(dir<0?'더 되돌릴 게 없어요':'다시 할 게 없어요',1400);return}
  to.push(HIST.cur);const n=from.pop();HIST.cur=n;HIST.at=0;
- const keep={tab:P.tab,edit:P.edit,vol:P.vol,pro:P.pro,loop:P.loop,mute:P.mute,len:P.len};P={...JSON.parse(n.s),...keep};P.A.img=n.imgs.A;P.B.img=n.imgs.B;UNDO.A=[];UNDO.B=[];
+ const keep={};['tab','edit','vol','pro','loop','mute','len','tourOff','seen','feelOpen','guideOff','adv'].forEach(k=>{if(k in P)keep[k]=P[k]});P={...JSON.parse(n.s),...keep};P.A.img=n.imgs.A;P.B.img=n.imgs.B;UNDO.A=[];UNDO.B=[];
  HIST.lock=true;try{syncControls();refresh();[P.kit,P.A.kit,P.B.kit].forEach(k=>{if(k)loadKit(k)});if(PL.on)startPlay()}finally{HIST.lock=false}
  histUI();toast(dir<0?'되돌렸어요':'다시 했어요',1000)}
-function histUI(){const u=$('hUndo'),r=$('hRedo');if(u)u.setAttribute('aria-disabled',String(!HIST.u.length));if(r)r.setAttribute('aria-disabled',String(!HIST.r.length))}
+function histUI(){const u=$('hUndo'),r=$('hRedo'),c=$('hClear');if(u)u.setAttribute('aria-disabled',String(!HIST.u.length));if(r)r.setAttribute('aria-disabled',String(!HIST.r.length));if(c)c.setAttribute('aria-disabled',String(!HIST.u.length&&!HIST.r.length))}
+async function histClear(){const n=HIST.u.length+HIST.r.length;if(!n){toast('지울 기록이 없어요',1400);return}
+ if(!await ask(`되돌리기 기록 ${n}개를 지울까요? 지금 곡은 그대로 남고, 이전 상태로는 못 돌아가요.`,'지우기'))return;
+ HIST.u=[];HIST.r=[];HIST.cur=histSnap();HIST.at=0;UNDO.A=[];UNDO.B=[];histUI();toast('기록을 지웠어요',1400)}
 
 /* ---------- 오디오 ---------- */
 function pulseWave(c,d){const N=48,re=new Float32Array(N),im=new Float32Array(N);for(let n=1;n<N;n++){re[n]=Math.sin(2*Math.PI*n*d)/(n*Math.PI);im[n]=(1-Math.cos(2*Math.PI*n*d))/(n*Math.PI)}return c.createPeriodicWave(re,im)}
@@ -1854,7 +1857,7 @@ $('scL').addEventListener('click',()=>{$('rollwrap').scrollBy({left:-CW*32,behav
 $('scR').addEventListener('click',()=>{$('rollwrap').scrollBy({left:CW*32,behavior:'smooth'})});
 $('rollwrap').addEventListener('wheel',e=>{if(!$('rollwrap').classList.contains('ed')||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;e.preventDefault();$('rollwrap').scrollLeft+=e.deltaY},{passive:false});
 $('len').addEventListener('change',e=>{P.len=+e.target.value;save()});
-$('hUndo').addEventListener('click',()=>histGo(-1));$('hRedo').addEventListener('click',()=>histGo(1));
+$('hUndo').addEventListener('click',()=>histGo(-1));$('hClear').addEventListener('click',histClear);$('hRedo').addEventListener('click',()=>histGo(1));
 document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.altKey)return;const k=e.key.toLowerCase();if(k!=='z'&&k!=='y')return;
  const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))&&!(t.type==='range'||t.type==='checkbox'||t.type==='color'))return;
  if(document.querySelector('.modal:not(.hidden)'))return;e.preventDefault();histGo(k==='y'||e.shiftKey?1:-1)});
@@ -1933,6 +1936,8 @@ addEventListener('scroll',()=>{if(tourI>=0)tPlace()},{passive:true});
 if(!P.tourOff)setTimeout(startTour,350);
 getDL();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>drawRoll());
+/* 처음 열 때 생긴 정리용 변경은 기록에서 빼기 */
+setTimeout(()=>{HIST.u=[];HIST.r=[];HIST.cur=histSnap();HIST.at=0;histUI()},0);
 }
 </script>
 </body>
