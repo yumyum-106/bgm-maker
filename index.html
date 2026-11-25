@@ -906,7 +906,7 @@ function coopSong(TA,TB,relArg){
  const eLo=Math.min(A.energy,B.energy),eHi=Math.max(A.energy,B.energy),E={lo:eLo,hi:eHi,mid:(eLo+eHi)/2};
  const st=e=>A.style==='heart'&&B.style==='heart'?'heart':e<.5?0:e<.75?1:2;
  const sw2=FAM[(items.find(x=>x.fam!==dom.fam)||dom).fam].wave;
- for(let b=0;b<16;b++){const bb=bars[b],e=Math.max(E[bb.e],bb.min||0),aw=bb.solo==='A'?bw:bb.solo==='B'?A.wave:sw2;accomp(ev,{tonic,mode:bb.mode||mode},b,ch[b],e,aw,bb.style!=null?bb.style:st(e),(A.space+B.space)/2,bb.solo==='A'?A.kit:bb.solo==='B'?B.kit:(A.kit||B.kit))}
+ for(let b=0;b<16;b++){const bb=bars[b],e=Math.max(E[bb.e],bb.min||0),aw=bb.solo==='A'?bw:bb.solo==='B'?A.wave:sw2,n0=ev.length;accomp(ev,{tonic,mode:bb.mode||mode},b,ch[b],e,aw,bb.style!=null?bb.style:st(e),(A.space+B.space)/2,bb.solo==='A'?A.kit:bb.solo==='B'?B.kit:(A.kit||B.kit));if(bb.solo){const w=bb.solo==='A'?'B':'A';for(let i=n0;i<ev.length;i++)if(ev[i].ch==='harm')ev[i].acc=w}}
  sections.forEach(([at])=>{if(at%16===0&&bars[at/16].style==null)ev.push({t:at,dr:'c',v:.4,ch:'drum'})});
  return{bpm,steps:256,ev,tonic,mode,F,dom,items,chords:ch,A,B,bw,rel,hookNote,sections:sections.map(([at,label,col])=>({at,label,col}))};
 }
@@ -1347,11 +1347,13 @@ function noiseTile(){if(NOISE)return NOISE;const c=document.createElement('canva
 function vSpec(){
  const song=SONG[P.tab],sd=60/song.bpm/4,off=1.2,dur=off+song.steps*sd+2.6;
  const ms=song.ev.filter(e=>e.ch==='lead'||e.ch==='lead2').map(e=>e.m);let lo=Math.min(...ms)-2,hi=Math.max(...ms)+2;while(hi-lo<16){lo--;hi++}
+ /* 합주에서 한 사람이 멜로디일 때 다른 사람이 맡는 반주(아르페지오) — 기본·VHS·건반 테마에 보여줌 */
+ const acc=P.tab==='AB'&&P.mute.harm!==false?song.ev.filter(e=>e.acc).map(e=>({...e,who:e.acc,ch:'acc'})):[],alo=acc.length?Math.min(lo,Math.min(...acc.map(e=>e.m))-1):lo;
  const co=P.tab==='AB',A=co?song.A:TH[P.tab],B=co?song.B:null;
  const imgs=co?[[A,P[P.swap?'B':'A'].img],[B,P[P.swap?'A':'B'].img]]:[[A,P[P.tab].img]];
  const c1=VS.col1,c2=VS.col2,cA=(co?(P.swap?c2:c1):(P.tab==='A'?c1:c2))||A.color,cB=B?((P.swap?c1:c2)||B.color):null;
  const mapCol=c=>c===A.color?cA:B&&c===B.color?cB:c;
- return{song,sd,off,dur,lo,hi,co,A,B,cA,cB,mapCol,imgs,fps:30,env:null,
+ return{song,sd,off,dur,lo,hi,acc,alo,co,A,B,cA,cB,mapCol,imgs,fps:30,env:null,
   title:co?`${A.name} × ${B.name}`:`${A.name} 테마`,sub:co?FEEL[song.rel].ko:`${FAM[A.a.dom.fam].ko} → ${A.F.mood}`,
   secs:song.sections||[{at:0,label:A.name+' 테마',col:A.color}]};
 }
@@ -1372,14 +1374,14 @@ function vFrame(x,W,H,t,V){
  let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(0,0,0,.55)');g.addColorStop(.3,'rgba(0,0,0,.1)');g.addColorStop(.7,'rgba(0,0,0,.16)');g.addColorStop(1,'rgba(0,0,0,.72)');x.fillStyle=g;x.fillRect(0,0,W,H);
  g=x.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,W*.72);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.6)');x.fillStyle=g;x.fillRect(0,0,W,H);
  if(th==='roll'){
- const pps=W/52,px0=W*.3,top=H*.23,bot=H*.79,rh=(bot-top)/(V.hi-V.lo+1);
+ const pps=W/52,px0=W*.3,top=H*.23,bot=H*.79,rh=(bot-top)/(V.hi-V.alo+1);
  x.fillStyle='rgba(255,255,255,.05)';for(let b=0;b<=song.steps;b+=16){const X=px0+(b-cur)*pps;if(X>-2&&X<W+2)x.fillRect(Math.round(X),top-10*k,Math.max(1,k),bot-top+20*k)}
  const evs=song.ev.filter(e=>e.ch==='lead'||e.ch==='lead2');
  const note=(e,low)=>{const X=px0+(e.t-cur)*pps,w=Math.max(3*k,e.l*pps-3*k);if(X>W||X+w<-30)return;const y=top+(V.hi-e.m)*rh,end=e.t+e.l,act=cur>=e.t&&cur<end;
   let a=cur<e.t?.4:act?1:.85*Math.exp(-(cur-end)/14);if(low)a*=.55;const h=Math.max(6*k,rh*(low?.5:.85))*(act?1.25:1),Y=y+(rh-h)/2,r=Math.min(h/2,6*k),col=vcol(V,e);
   x.globalAlpha=a;x.fillStyle=col;if(act){x.shadowColor=col;x.shadowBlur=26*k}rr(x,X,Y,w,h,r);x.fill();x.shadowBlur=0;
   if(act){x.globalAlpha=.5;x.fillStyle='#fff';rr(x,X,Y,w,Math.max(1.5*k,h*.22),r);x.fill()}x.globalAlpha=1};
- evs.forEach(e=>{if(e.ch==='lead2')note(e,true)});evs.forEach(e=>{if(e.ch==='lead')note(e,false)});
+ V.acc.forEach(e=>note(e,true));evs.forEach(e=>{if(e.ch==='lead2')note(e,true)});evs.forEach(e=>{if(e.ch==='lead')note(e,false)});
  x.lineWidth=2*k;evs.forEach(e=>{if(e.ch!=='lead')return;const age=(cur-e.t)*V.sd;if(age<0||age>.75)return;x.globalAlpha=(1-age/.75)*.55;x.strokeStyle=vcol(V,e);x.beginPath();x.arc(px0,top+(V.hi-e.m)*rh+rh/2,(6+age*80)*k,0,Math.PI*2);x.stroke()});x.globalAlpha=1;
  g=x.createLinearGradient(px0-16*k,0,px0+16*k,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,`rgba(255,255,255,${.07+.12*amp})`);g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(px0-16*k,top-26*k,32*k,bot-top+52*k);
  x.fillStyle='rgba(255,255,255,.55)';x.fillRect(px0-.75*k,top-26*k,1.5*k,bot-top+52*k);
@@ -1420,12 +1422,12 @@ function vPortrait(x,cx,cy,r,src,ring,lw){x.save();x.beginPath();x.arc(cx,cy,r,0
 const VT={roll:1,
 vhs(x,W,H,t,V,o){
  const{k,cur,F,M}=o,c=vPrep(V);x.fillStyle='rgba(8,10,30,.42)';x.fillRect(0,0,W,H);
- const pps=W/40,px0=W*.32,top=H*.24,bot=H*.76,rh=(bot-top)/(V.hi-V.lo+1),q=Math.round;
- const draw=e=>{const X=px0+(e.t-cur)*pps,w=Math.max(4*k,e.l*pps-4*k);if(X>W+10||X+w<-20)return;const low=e.ch==='lead2',h=Math.max(8*k,rh*(low?.45:.8)),Y=top+(V.hi-e.m)*rh+(rh-h)/2,end=e.t+e.l,act=cur>=e.t&&cur<end;
+ const pps=W/40,px0=W*.32,top=H*.24,bot=H*.76,rh=(bot-top)/(V.hi-V.alo+1),q=Math.round;
+ const draw=e=>{const X=px0+(e.t-cur)*pps,w=Math.max(4*k,e.l*pps-4*k);if(X>W+10||X+w<-20)return;const low=e.ch!=='lead',h=Math.max(e.ch==='acc'?5*k:8*k,rh*(low?.45:.8)),Y=top+(V.hi-e.m)*rh+(rh-h)/2,end=e.t+e.l,act=cur>=e.t&&cur<end;
   let a=cur<e.t?.55:act?1:Math.max(.22,.9*Math.exp(-(cur-end)/18));if(low)a*=.6;const col=vcol(V,e),jy=act?-3*k:0;
   x.globalAlpha=a*.5;x.fillStyle='#ff2a55';x.fillRect(q(X-3*k),q(Y+jy),q(w),q(h));x.fillStyle='#22d3ff';x.fillRect(q(X+3*k),q(Y+jy),q(w),q(h));
   x.globalAlpha=a;x.fillStyle=col;x.fillRect(q(X),q(Y+jy),q(w),q(h));if(act){x.fillStyle='rgba(255,255,255,.75)';x.fillRect(q(X),q(Y+jy),q(w),q(Math.max(2*k,h*.25)))}x.globalAlpha=1};
- c.evs.forEach(e=>{if(e.ch==='lead2')draw(e)});c.evs.forEach(e=>{if(e.ch==='lead')draw(e)});
+ V.acc.forEach(draw);c.evs.forEach(e=>{if(e.ch==='lead2')draw(e)});c.evs.forEach(e=>{if(e.ch==='lead')draw(e)});
  x.fillStyle='rgba(255,255,255,.55)';x.fillRect(q(px0),q(top-30*k),Math.max(1,q(2*k)),q(bot-top+60*k));
  const sp=Math.max(2,q(3*k));x.fillStyle='rgba(0,0,0,.26)';for(let y=0;y<H;y+=sp)x.fillRect(0,y,W,Math.max(1,q(sp/3)));
  const by=((t*.29)%1.3)*H-40*k,R=rng(Math.floor(t*12)+1);x.fillStyle='rgba(255,255,255,.06)';x.fillRect(0,by,W,22*k);x.fillStyle='rgba(255,255,255,.3)';for(let i=0;i<14;i++)x.fillRect(R()*W,by+R()*22*k,(20+R()*90)*k,1.5*k);
@@ -1498,17 +1500,17 @@ rpg(x,W,H,t,V,o){
  vVig(x,W,H,.45)},
 keys(x,W,H,t,V,o){
  const{k,cur,M}=o,c=vPrep(V);x.fillStyle='rgba(6,6,12,.5)';x.fillRect(0,0,W,H);
- if(!c.kb){const WH=[0,2,4,5,7,9,11],keys=[];let wi=0;for(let m=V.lo;m<=V.hi;m++){const w=WH.includes(((m%12)+12)%12);keys.push({m,w,wi:w?wi++:wi});}c.kb={keys,nW:wi}}
+ if(!c.kb){const WH=[0,2,4,5,7,9,11],keys=[];let wi=0;for(let m=V.alo;m<=V.hi;m++){const w=WH.includes(((m%12)+12)%12);keys.push({m,w,wi:w?wi++:wi});}c.kb={keys,nW:wi}}
  const kb=c.kb,L=M,kw=(W-2*M)/kb.nW,kt=H*.6,kh=H*.17,spd=(kt-H*.1)/28;
- const keyX=K=>K.w?L+K.wi*kw:L+K.wi*kw-kw*.3,keyW=K=>K.w?kw:kw*.6,kOf=m=>kb.keys[clamp(m-V.lo,0,kb.keys.length-1)];
- const on={};c.evs.forEach(e=>{if(cur>=e.t&&cur<e.t+e.l)on[e.m]=vcol(V,e)});
+ const keyX=K=>K.w?L+K.wi*kw:L+K.wi*kw-kw*.3,keyW=K=>K.w?kw:kw*.6,kOf=m=>kb.keys[clamp(m-V.alo,0,kb.keys.length-1)];
+ const on={};V.acc.concat(c.evs).forEach(e=>{if(cur>=e.t&&cur<e.t+e.l)on[e.m]=vcol(V,e)});
  /* 떨어지는 음 */
  x.save();x.beginPath();x.rect(0,0,W,kt);x.clip();
  x.fillStyle='rgba(255,255,255,.04)';kb.keys.forEach(K=>{if(K.w&&((K.m%12)+12)%12===0)x.fillRect(keyX(K),0,Math.max(1,k),kt)});
- const fall=e=>{const end=e.t+e.l;if(cur>=end)return;const yB=Math.min(kt,kt-(e.t-cur)*spd),yT=kt-(end-cur)*spd;if(yB<0)return;const K=kOf(e.m),low=e.ch==='lead2',w=keyW(K)*(K.w?.78:.9),X=keyX(K)+(keyW(K)-w)/2,col=vcol(V,e);
+ const fall=e=>{const end=e.t+e.l;if(cur>=end)return;const yB=Math.min(kt,kt-(e.t-cur)*spd),yT=kt-(end-cur)*spd;if(yB<0)return;const K=kOf(e.m),low=e.ch!=='lead',w=keyW(K)*(K.w?(e.ch==='acc'?.5:.78):.9),X=keyX(K)+(keyW(K)-w)/2,col=vcol(V,e);
   x.globalAlpha=low?.45:.95;x.fillStyle=col;if(cur>=e.t){x.shadowColor=col;x.shadowBlur=20*k}rr(x,X,yT,w,Math.max(4*k,yB-yT),Math.min(w/2,6*k));x.fill();x.shadowBlur=0;
   x.globalAlpha=low?.2:.45;x.fillStyle='#fff';rr(x,X+w*.15,yT+2*k,w*.18,Math.max(2*k,yB-yT-4*k),2*k);x.fill();x.globalAlpha=1};
- c.evs.forEach(e=>{if(e.ch==='lead2')fall(e)});c.evs.forEach(e=>{if(e.ch==='lead')fall(e)});
+ V.acc.forEach(fall);c.evs.forEach(e=>{if(e.ch==='lead2')fall(e)});c.evs.forEach(e=>{if(e.ch==='lead')fall(e)});
  c.lead.forEach(e=>{const age=(cur-e.t)*V.sd;if(age<0||age>.6)return;const K=kOf(e.m),cx=keyX(K)+keyW(K)/2,col=vcol(V,e),R=rng(e.t*131+e.m);x.fillStyle=col;
   for(let i=0;i<7;i++){const a=-Math.PI*(.15+.7*R()),v=(90+120*R())*k,px=cx+Math.cos(a)*v*age,py=kt+Math.sin(a)*v*age+260*k*age*age;x.globalAlpha=Math.max(0,1-age/.6);x.fillRect(px-2*k,py-2*k,4*k,4*k)}x.globalAlpha=1});
  x.restore();
